@@ -3,3 +3,4 @@ protobuf
 requests
 duckdb
 pyarrow
+quixstreams
