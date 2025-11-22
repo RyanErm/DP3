@@ -53,14 +53,17 @@ class MetroStreamer: #writing own class
                             "route_id": entity.trip_update.trip.route_id,
                             "start_time": entity.trip_update.trip.start_time,
                             "start_date": entity.trip_update.trip.start_date,
+                            "schedule_relationship": entity.trip_update.trip.schedule_relationship,
+                            "direction_id": entity.trip_update.trip.direction_id,
                         },
-                        "vehicle": {
-                            "id": entity.trip_update.vehicle.id,
-                        },
+                        "vehicle_id": entity.trip_update.vehicle.id,
+                        "timestamp": entity.trip_update.timestamp,
+                        "delay": entity.trip_update.delay,
                         "stop_time_updates": [
                             {
                                 "stop_sequence": stu.stop_sequence,
                                 "stop_id": stu.stop_id,
+                                "schedule_relationship": stu.schedule_relationship,
                                 "arrival": {
                                     "time": stu.arrival.time
                                 } if stu.HasField("arrival") else None,
@@ -70,8 +73,6 @@ class MetroStreamer: #writing own class
                             }
                             for stu in entity.trip_update.stop_time_update
                         ],
-                        "timestamp": entity.trip_update.timestamp,
-                        "delay": entity.trip_update.delay,
                     }
                 }
 
