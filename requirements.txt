@@ -4,3 +4,6 @@ requests
 duckdb
 pyarrow
 quixstreams
+prefect
+datetime
+time
