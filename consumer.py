@@ -1,7 +1,5 @@
 #Ryan Ermovick
 #Dev Aswani
-
-
 from quixstreams import Application
 import json
 import time
