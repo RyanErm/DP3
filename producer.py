@@ -85,37 +85,28 @@ def publish_to_kafka_positions(app, topic):
     ######################################## Update here
     with app.get_producer() as producer:
         for entity in feed.entity:
-            if not entity.HasField("trip_update"):
+            if not entity.HasField("vehicle"):
                 continue
             event_key = entity.id
             event_dict = {
-                "trip_update": {
-                    "trip": {
-                        "trip_id": entity.trip_update.trip.trip_id,
-                        "route_id": entity.trip_update.trip.route_id,
-                        "start_time": entity.trip_update.trip.start_time,
-                        "start_date": entity.trip_update.trip.start_date,
-                        "schedule_relationship": entity.trip_update.trip.schedule_relationship,
-                        "direction_id": entity.trip_update.trip.direction_id,
-                    },
-                    "vehicle_id": entity.trip_update.vehicle.id,
-                    "timestamp": entity.trip_update.timestamp,
-                    "delay": entity.trip_update.delay,
-                    "stop_time_updates": [
-                        {
-                            "stop_sequence": stu.stop_sequence,
-                            "stop_id": stu.stop_id,
-                            "schedule_relationship": stu.schedule_relationship,
-                            "arrival": {
-                                "time": stu.arrival.time
-                            } if stu.HasField("arrival") else None,
-                            "departure": {
-                                "time": stu.departure.time
-                            } if stu.HasField("departure") else None,
-                        }
-                        for stu in entity.trip_update.stop_time_update
-                    ],
-                }
+                "trip_id": entity.vehicle.trip.trip_id,
+                "start_time": entity.vehicle.trip.start_time, 
+                "start_date": entity.vehicle.trip.start_date,
+                "schedule_relationship": entity.vehicle.trip.schedule_relationship,
+                "route_id": entity.vehicle.trip.route_id,
+                "position": {
+                    "latitude": entity.vehicle.position.latitude,
+                    "longitude": entity.vehicle.position.longitude,
+                    "speed": entity.vehicle.position.speed,
+                    "bearing": entity.vehicle.position.bearing,
+                },
+                "vehicle":{
+                    "vehicle": entity.vehicle.vehicle.id,
+                    "label": entity.vehicle.vehicle.label,
+                },
+                "current_status": entity.vehicle.current_status, 
+                "timestamp": entity.vehicle.timestamp
+
             }
 
             serialized = topic.serialize(
@@ -129,8 +120,8 @@ def publish_to_kafka_positions(app, topic):
                 value=serialized.value
             )
 
-@flow(name = "Metro-flow")
-def my_flow():
+@flow(name = "Metro-flow", log_prints = True)
+def consumer_flow():
     app = Application( #initialize app
     broker_address=KAFKA_BROKER,
     producer_extra_config={
@@ -154,16 +145,12 @@ def my_flow():
 
     print(f"Producing to topic: {topic2.name}")
     min = 0
-    while min<=60:
+    while min<1: #this should be 60 so we can collect 1 hours worth of data
         publish_to_kafka_updates(app, topic1)
         publish_to_kafka_positions(app, topic2)
         min+=1
-        time.sleep(60)
+        time.sleep(10)
 
-        
-
-
+    
 if __name__ == "__main__":
-    my_flow()
-
-
+    consumer_flow()
