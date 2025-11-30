@@ -11,11 +11,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+LOG_FILE = "analysis.log"
+
 logging.basicConfig(
     level=logging.INFO,
-    format="[%(levelname)s] %(message)s",
+    format="[%(levelname)s] %(asctime)s - %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE, mode="w"),  
+        logging.StreamHandler()                   
+    ]
 )
-
 DEFAULT_DB_PATH = "metro.duckdb"
 
 TABLE_POSITIONS = "positions"
@@ -238,6 +243,13 @@ def plot_speed_vs_delay(con: duckdb.DuckDBPyConnection, out_dir: Path) -> None:
 def sanitize_filename_part(s: str) -> str:
     return re.sub(r"[^A-Za-z0-9]+", "_", s).strip("_") or "route"
 
+def list_unique_routes(con: duckdb.DuckDBPyConnection) -> list[str]:
+    """Return and print all unique route_ids available in the positions table."""
+    query = f"SELECT DISTINCT {COL_ROUTE_ID} FROM {TABLE_POSITIONS} WHERE {COL_ROUTE_ID} IS NOT NULL ORDER BY {COL_ROUTE_ID};"
+    df = con.execute(query).fetchdf()
+    routes = sorted(df[COL_ROUTE_ID].dropna().unique())
+    logging.info("Available routes:\n%s", ", ".join(routes))
+    return routes
 
 def plot_avg_delay_for_routes(
     con: duckdb.DuckDBPyConnection,
@@ -300,6 +312,7 @@ def main() -> None:
     con = connect_db(args.db)
     list_tables(con)
     df = load_combined_data(con)
+    available_routes = list_unique_routes(con)
 
     if df.empty:
         logging.warning("No data to plot from positions.")
