@@ -3,6 +3,8 @@
 
 
 ## Execution
+First, ensure that the proper packages are install on your computer or virtual environment via the requirements.txt file. 
+
 Ensure that Docker is up and running on your computer. Then run the following command:
 
 ```bash
@@ -36,3 +38,4 @@ Please note! This step will ask you to input two different bus lines that you wo
 
 ## Additional Details
 The updates API will give 1000-2000 data points per call. The positions API will give 300-500 data points per call. Allowing the producer script to run for 30-40 minutes should allow the program to collect at least 50,000 data points.  
+
