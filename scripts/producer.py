@@ -18,7 +18,8 @@ API_KEY = "4d7182489af74b9f82486ea11265d85d"
 headers = {"api_key": API_KEY}
 
 #task to produce bus updates to kafka
-@task(retries=100, retry_delay_seconds=10)
+#tasks help with retries and logging
+@task(retries=1000, retry_delay_seconds=10)
 def publish_to_kafka_updates(app, topic):
     #graceful error handling
     try:
@@ -75,7 +76,7 @@ def publish_to_kafka_updates(app, topic):
                     key=event_key,
                     value=event_dict
                 )
-                #produce the data
+                #produce the data to kafka
                 producer.produce(
                     topic=topic.name,
                     key=serialized.key,   
@@ -88,7 +89,7 @@ def publish_to_kafka_updates(app, topic):
         
 
 #task to produce bus positions to kafka
-@task(retries=100, retry_delay_seconds=10)
+@task(retries=1000, retry_delay_seconds=10)
 def publish_to_kafka_positions(app, topic):
     #graceful error handling
     try:
