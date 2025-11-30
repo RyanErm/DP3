@@ -18,12 +18,6 @@ env/
 metro.duckdb
 metro.duckdb.wal
 
-plots/
-*.png
-*.jpg
-*.jpeg
-*.svg
-
 # Logs
 *.log
 
