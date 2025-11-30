@@ -8,7 +8,12 @@ Ensure that Docker is up and running on your computer. Then run the following co
 ```bash
 docker compose up -d
 ```
-Once that has executed, you can collect data from both Metro API's and produce to Kafka with this command:
+Once that has executed successfully, you can collect data from both Metro API's and produce to Kafka. However, first change directories with this command:
+
+```bash
+cd scripts
+```
+Then you can run the following command to gather the data:
 
 ```bash
 python producer.py
@@ -26,8 +31,8 @@ Finally to generate plots run the following command:
 ```bash
 python analysis.py
 ```
-Please note! This step will ask you to input two different bus lines that you would like to compare (e.g. "M10"). Then a plot will be generated based on those two options
+Please note! This step will ask you to input two different bus lines that you would like to compare (e.g. "C41"). Then a plot will be generated based on those two options.
 
 
 ## Additional Details
-The updates API will give 1000-2000 (FIX) data points per call. The positions API will give ~500 (FIX) data points per call. Allowing the producer script to run for 30 minutes will collect ????? data points. 
+The updates API will give 1000-2000 data points per call. The positions API will give 300-500 data points per call. Allowing the producer script to run for 30-40 minutes should allow the program to collect at least 50,000 data points.  

@@ -41,7 +41,7 @@ COL_DELAY = "delay"  # from updates
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run analysis and produce plots.")
     parser.add_argument("--db", type=str, default=DEFAULT_DB_PATH)
-    parser.add_argument("--out", type=str, default="plots")
+    parser.add_argument("--out", type=str, default="../plots")
     parser.add_argument("--top-n", type=int, default=10)
 
     # Optional CLI overrides for route comparison
@@ -230,8 +230,8 @@ def plot_speed_vs_delay(con: duckdb.DuckDBPyConnection, out_dir: Path) -> None:
 
     plt.figure(figsize=(8, 6))
     plt.scatter(df["avg_speed"], df["avg_delay"], alpha=0.5)
-    plt.xlabel("Average Speed")
-    plt.ylabel("Average Delay")
+    plt.xlabel("Average Speed (meters/seconds)")
+    plt.ylabel("Average Delay (seconds)")
     plt.title("Average Speed vs Average Delay per Trip")
     plt.tight_layout()
 
@@ -292,7 +292,7 @@ def plot_avg_delay_for_routes(
     plt.figure(figsize=(6, 5))
     plt.bar(df["route_id"], df["avg_delay"])
     plt.xlabel("Route ID")
-    plt.ylabel("Average Delay")
+    plt.ylabel("Average Delay (seconds)")
     plt.title(f"Average Delay: {route_a} vs {route_b}")
     plt.tight_layout()
 
@@ -336,7 +336,7 @@ def main() -> None:
         try:
             logging.info("No route IDs provided via CLI; prompting for input.")
             if not route_a:
-                route_a = input("Enter first route ID (e.g., C40): ").strip()
+                route_a = input("Enter first route ID (e.g., C41): ").strip()
             if not route_b:
                 route_b = input("Enter second route ID (e.g., A58): ").strip()
         except EOFError:
