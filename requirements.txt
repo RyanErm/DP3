@@ -5,6 +5,7 @@ duckdb
 pyarrow
 quixstreams
 prefect
+os
 datetime
 time
 json

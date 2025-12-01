@@ -63,4 +63,4 @@ python analysis.py
 Please note! This step will ask you to input two different bus lines that you would like to compare (e.g. "C41"). Then a plot will be generated based on those two options.
 
 ## Additional Details
-The updates API will give 1000-2000 data points per call. The positions API will give 300-500 data points per call. Allowing the producer script to run for 30-40 minutes should allow the program to collect at least 50,000 data points.  
+The updates API will give 1000-2000 data points per call. The positions API will give 300-500 data points per call. Allowing the producer script to run for 20-30 iterations should allow the program to collect at least 50,000 data points.  

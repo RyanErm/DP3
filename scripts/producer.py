@@ -176,13 +176,13 @@ def consumer_flow():
         print(f"Producing to topic: {topic2.name}")
 
         #min is the counter for how long data should be collected
-        min = 0
-        while min<2:
+        iterations = 0
+        while iterations<24:
             #publish both bus updates and positions
             publish_to_kafka_updates(app, topic1)
             publish_to_kafka_positions(app, topic2)
-            min+=1
-            print(f"Data has been collected for {min} minutes so far")
+            iterations+=1
+            print(f"Data has been collected for {iterations} iterations so far")
             #wait at least 45 seconds for new data
             time.sleep(45)
     except Exception as e:
