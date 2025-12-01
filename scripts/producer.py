@@ -85,7 +85,7 @@ def publish_to_kafka_updates(app, topic):
                 print(f"The bus with the id {event_key} has been inputted into Kafka")
 
     except Exception as e:
-        print(f"e")
+        print(f"{e}")
         
 
 #task to produce bus positions to kafka
@@ -143,7 +143,7 @@ def publish_to_kafka_positions(app, topic):
                 )
                 print(f"The bus with the id {event_key} has been inputted into Kafka")
     except Exception as e:
-        print(f"e")
+        print(f"{e}")
 
 
 #flow that runs all the tasks
@@ -186,7 +186,7 @@ def consumer_flow():
             #wait at least 45 seconds for new data
             time.sleep(45)
     except Exception as e:
-        print(f"e")
+        print(f"{e}")
 
 
 #run the whole code
@@ -195,4 +195,4 @@ if __name__ == "__main__":
     try:
         consumer_flow()
     except Exception as e:
-        print(f"e")
+        print(f"{e}")

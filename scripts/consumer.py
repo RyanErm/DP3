@@ -199,7 +199,7 @@ def updates_duckdb(app):
                     #let kafka know that this message has been consumed
                     consumer.store_offsets(msg)
     except Exception as e:
-        print(f"e")
+        print(f"{e}")
 
 #task to insert all positions into duckdb
 @task(cache_key_fn=None)
@@ -240,7 +240,7 @@ def positions_duckdb(app):
                         print(f"✗ Failed to insert record {offset}")
                     consumer.store_offsets(msg)
     except Exception as e:
-        print(f"e")
+        print(f"{e}")
 
 #flow to run everything
 @flow(name = "Metro-flow", log_prints = True)
@@ -257,7 +257,7 @@ def consumer_flow():
         positions_duckdb(app)
         print("Consumed all position data")
     except Exception as e:
-        print(f"e")
+        print(f"{e}")
 
 if __name__ == "__main__":
     #graceful error handling
