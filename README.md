@@ -46,12 +46,14 @@ Then to consume the update data from Kafka, run this command:
 ```bash 
 python consumer_updates.py
 ```
+Once it starts outputting that there are no messages left type "Command C" to stop the program. The program can also be stopped early if desired. Then move onto the next script
 
 To consume all the positions data from Kafka, run this command:
 
 ```bash
 python consumer_positions.py
 ```
+Once it starts outputting that there are no messages left type "Command C" to stop the program. The program can also be stopped early if desired. 
 
 Finally to generate plots run the following command:
 
