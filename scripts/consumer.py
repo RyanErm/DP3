@@ -11,6 +11,7 @@ from datetime import datetime
 import duckdb
 from prefect import task, flow
 
+
 #set up kafka broker address
 KAFKA_BROKER = "127.0.0.1:19092,127.0.0.1:29092,127.0.0.1:39092"
 
@@ -19,13 +20,7 @@ KAFKA_BROKER = "127.0.0.1:19092,127.0.0.1:29092,127.0.0.1:39092"
 def setup():
     #graceful error handling
     try:
-        #connect to kafka
-        app = Application(
-            broker_address=KAFKA_BROKER,
-            consumer_group="metro_reader",
-            auto_offset_reset="earliest",
-        )
-        print("Connected to Kafka")
+
         #connect to Duckdb
         con = duckdb.connect(database='metro.duckdb', read_only=False)
         print("Connected to Duckdb")
@@ -64,20 +59,16 @@ def setup():
                     schedule_relationship VARCHAR);
         """)
         print("Positions table has been created")
-        #return the app connection
-        return app
+        return True
+        
     except Exception as e:
         print(e)
 
 #task for update data entries
-@task(retries=100, retry_delay_seconds=10, cache_key_fn=None)
-def insert_update_record(kafka_key, offset, value):
+def insert_update_record(kafka_key, offset, value, con: duckdb.DuckDBPyConnection):
     #Insert an update record into the database
     #graceful error handling
     try:
-        #connecting
-        con = duckdb.connect(database='metro.duckdb', read_only=False)
-        print("Connected to Duckdb")
         # Extract properties from the nested structure
         trip_id = value["trip_update"]["trip"]["trip_id"]
         route_id = value["trip_update"]["trip"]["route_id"]
@@ -108,15 +99,12 @@ def insert_update_record(kafka_key, offset, value):
         print(f"Error inserting record: {e}")
         return False
 
-#task for position data entries
-@task(retries=100, retry_delay_seconds=10, cache_key_fn=None)
-def insert_position_record(kafka_key, offset, value):
+#function for position data entries
+
+def insert_position_record(kafka_key, offset, value, con:duckdb.DuckDBPyConnection):
     #Insert an update record into the database
     #graceful error handling
     try:
-        #connecting
-        con = duckdb.connect(database='metro.duckdb', read_only=False)
-        print("Connected to Duckdb")
         # Extract properties from the nested structure
         trip_id = value["trip_id"]
         route_id = value["route_id"]
@@ -159,86 +147,108 @@ def insert_position_record(kafka_key, offset, value):
         return False
     
 #task to insert all updates into duckdb
-@task(retries=10, retry_delay_seconds=10, cache_key_fn=None)
-def updates_duckdb(app):
+@task(retries=1000, retry_delay_seconds=10, cache_key_fn=None)
+def updates_duckdb():
     #graceful error handling
     try:
+        app = Application(
+            broker_address=KAFKA_BROKER,
+            consumer_group="metro_reader_v2",
+            auto_offset_reset="earliest",
+        )
+        print("Connected to Kafka")
         #act as a consumer from kafka
         with app.get_consumer() as consumer:
             #subscribe to metro changes
             consumer.subscribe(["metro-changes"])
             print("Subscribed to the metro-changes topic.")
-            #set loop to run initially
-            state_variable = True
-            #run as long as the variable is tru
-            while state_variable == True:
-                #poll kafka, wait 5 seconds
-                msg = consumer.poll(5)
-                #if there are no messages, halt
-                if msg is None:
-                    print("No new messages")
-                    state_variable = False
-                #error handling
-                elif msg.error() is not None:
-                    raise Exception(msg.error())
-                else:
-                    print("Got a message!")
-                    #get key
-                    key = msg.key().decode("utf8")
-                    #get dictionary
-                    value = json.loads(msg.value())
-                    #get data position
-                    offset = msg.offset()
-                    #print out
-                    print(f"Here is the offset: {offset}, key: {key}, and value: {value}")
-                    # Insert into Duckdb
-                    if insert_update_record(key, offset, value):
-                        print(f"✓ Inserted record {offset} into DuckDB")
+            #run as long as the variable is true
+            with duckdb.connect('metro.duckdb', read_only = False) as con:
+                while True:
+                    #poll kafka, wait 5 seconds
+                    msg = consumer.poll(5)
+                    #if there are no messages, continue
+                    if msg is None:
+                        print("No new messages")
+                        continue
+                    #error handling
+                    elif msg.error() is not None:
+                        #reset quiet_polls
+                        quiet_polls = 0
+                        raise Exception(msg.error())
+                        
                     else:
-                        print(f"✗ Failed to insert record {offset}")
-                    #let kafka know that this message has been consumed
-                    consumer.store_offsets(msg)
+                        #reset quiet_polls
+                        quiet_polls = 0
+                        print("Got a message!")
+                        #get key
+                        key = msg.key().decode("utf8")
+                        #get dictionary
+                        value = json.loads(msg.value())
+                        #get data position
+                        offset = msg.offset()
+                        #print out
+                        print(f"Here is the offset: {offset}, key: {key}, and value: {value}")
+                        # Insert into Duckdb
+                        if insert_update_record(key, offset, value, con):
+                            print(f"✓ Inserted record {offset} into DuckDB")
+                        else:
+                            print(f"✗ Failed to insert record {offset}")
+                        #let kafka know that this message has been consumed
+                        consumer.store_offsets(msg)
+                    
     except Exception as e:
         print(f"{e}")
 
 #task to insert all positions into duckdb
-@task(cache_key_fn=None)
-def positions_duckdb(app):
+@task(retries=1000, retry_delay_seconds=10, cache_key_fn=None)
+def positions_duckdb():
     #graceful error handling
     try:
+        app = Application(
+            broker_address=KAFKA_BROKER,
+            consumer_group="metro_reader_v2",
+            auto_offset_reset="earliest",
+        )
+        print("Connected to Kafka")
         #connect as a consumer
         with app.get_consumer() as consumer:
             #subscribe to the positions topic
             consumer.subscribe(["metro-positions"])
             print("Subscribed to the metro-positions topic")
-            #set loop to run initially
-            state_variable = True
-            while state_variable == True:
-                #poll for messages, wait 5 seconds
-                msg = consumer.poll(5)
-                #if there are no messages, halt
-                if msg is None:
-                    print("No new messages for now")
-                    state_variable = False
-                #error handling
-                elif msg.error() is not None:
-                    raise Exception(msg.error())
-                else:
-                    print("Got a message!")
-                    #get key
-                    key = msg.key().decode("utf8")
-                    #get dictionary
-                    value = json.loads(msg.value())
-                    #get data position
-                    offset = msg.offset()
-                    #print out
-                    print(f"Here is the offset: {offset}, key: {key}, and value: {value}")
-                    # Insert into Duckdb
-                    if insert_position_record(key, offset, value):
-                        print(f"✓ Inserted record {offset} into DuckDB")
+            
+            with duckdb.connect('metro.duckdb', read_only = False) as con:
+                while True:
+                    #poll for messages, wait 5 seconds
+                    msg = consumer.poll(5)
+                    #if there are no messages, continue
+                    if msg is None:
+                        print("No new messages for now")
+                        continue
+                    #error handling
+                    elif msg.error() is not None:
+                        #reset conditional 
+                        quiet_polls = 0
+                        raise Exception(msg.error())
                     else:
-                        print(f"✗ Failed to insert record {offset}")
-                    consumer.store_offsets(msg)
+                        #reset conditional
+                        quiet_polls = 0
+                        print("Got a message!")
+                        #get key
+                        key = msg.key().decode("utf8")
+                        #get dictionary
+                        value = json.loads(msg.value())
+                        #get data position
+                        offset = msg.offset()
+                        #print out
+                        print(f"Here is the offset: {offset}, key: {key}, and value: {value}")
+                        # Insert into Duckdb
+                        if insert_position_record(key, offset, value, con):
+                            print(f"✓ Inserted record {offset} into DuckDB")
+                        else:
+                            print(f"✗ Failed to insert record {offset}")
+                        consumer.store_offsets(msg)
+                    
     except Exception as e:
         print(f"{e}")
 
@@ -248,14 +258,12 @@ def consumer_flow():
     #graceful error handling
     try:    
         #setup 
-        app=setup()
+        setup().submit()
         print("Fully set up!")
         #consume update data
-        updates_duckdb(app)
-        print("Consumed all update data")
+        updates_duckdb().submit()
         #consume update data
-        positions_duckdb(app)
-        print("Consumed all position data")
+        positions_duckdb().submit()
     except Exception as e:
         print(f"{e}")
 

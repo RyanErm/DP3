@@ -177,7 +177,7 @@ def consumer_flow():
 
         #min is the counter for how long data should be collected
         min = 0
-        while min<1: 
+        while min<2: 
             #publish both bus updates and positions
             publish_to_kafka_updates(app, topic1)
             publish_to_kafka_positions(app, topic2)
