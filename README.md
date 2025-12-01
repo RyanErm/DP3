@@ -41,10 +41,16 @@ python producer.py
 ```
 The amount of time for this script is variable.
 
-Then to consume the data from Kafka, run this command:
+Then to consume the update data from Kafka, run this command:
 
 ```bash 
-python consumer.py
+python consumer_updates.py
+```
+
+To consume all the positions data from Kafka, run this command:
+
+```bash
+python consumer_positions.py
 ```
 
 Finally to generate plots run the following command:
@@ -56,5 +62,3 @@ Please note! This step will ask you to input two different bus lines that you wo
 
 ## Additional Details
 The updates API will give 1000-2000 data points per call. The positions API will give 300-500 data points per call. Allowing the producer script to run for 30-40 minutes should allow the program to collect at least 50,000 data points.  
-
-
