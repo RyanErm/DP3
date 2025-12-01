@@ -10,6 +10,7 @@ import os
 from datetime import datetime
 import duckdb
 from prefect import task, flow
+from prefect.cache_policies import NO_CACHE
 
 
 #set up kafka broker address
@@ -51,7 +52,7 @@ def setup():
 
 
 #function for position data entries
-@task(retries=1000, retry_delay_seconds=10, cache_key_fn=None)
+@task(retries=1000, retry_delay_seconds=10, cache_key_fn=None, cache_policy=NO_CACHE)
 def insert_position_record(kafka_key, offset, value, con:duckdb.DuckDBPyConnection):
     #Insert an update record into the database
     #graceful error handling
@@ -98,7 +99,7 @@ def insert_position_record(kafka_key, offset, value, con:duckdb.DuckDBPyConnecti
         return False
 
 #task to insert all positions into duckdb
-@task(retries=1000, retry_delay_seconds=10, cache_key_fn=None)
+@task(retries=1000, retry_delay_seconds=10, cache_key_fn=None, cache_policy=NO_CACHE)
 def positions_duckdb():
     #graceful error handling
     try:
